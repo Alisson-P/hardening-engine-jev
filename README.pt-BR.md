@@ -163,11 +163,12 @@ validador que precisa passar antes de confiar nele.
 
 ## Como se prova
 
-**Controle de resposta conhecida, 40 de 40.** Cada regra da composição tem um
+**Controle de resposta conhecida, 41 de 41.** Cada regra da composição tem um
 caso com a resposta certa escrita antes de rodar, inclusive os exemplos
-resolvidos da própria documentação do Jev.
+resolvidos da própria documentação do Jev. O gerador dos relatórios do
+benchmark também tem caso.
 
-**Regras erradas de propósito, 25 de 25 pegas.** Cada uma estraga uma coisa só
+**Regras erradas de propósito, 26 de 26 pegas.** Cada uma estraga uma coisa só
 (baixar dois degraus, deixar o caminho descer, centrar o Score na média) e o
 controle tem que reprovar. Controle que nunca reprova não prova nada.
 
@@ -190,30 +191,39 @@ hardware.
 
 Os relatórios de entrada são sintéticos. Item, leitura, critério e detalhe saem
 do catálogo e da própria comparação do motor; só o valor lido é inventado.
-Quatro perfis de host, com 100, 1.000 e 5.000 achados cada, numa máquina Linux
-de um núcleo. Uma requisição por item, faixas entre os quatro perfis:
+Entram só as 59 leituras Linux que dão veredito, e o mesmo item nunca aparece
+duas vezes na mesma máquina. Quatro perfis de host, com 100, 1.000 e 5.000
+achados cada, numa máquina Linux de um núcleo. Uma requisição por item, faixas
+entre os quatro perfis:
 
 | Achados | Média por requisição | p95 | Achados por segundo | Travas violadas |
 |---:|---:|---:|---:|---:|
-| 100 | 2,6 a 4,4 ms | 2,7 a 7,5 ms | 143 a 236 | 0 |
-| 1.000 | 2,7 a 2,8 ms | 2,9 a 3,1 ms | 218 a 232 | 0 |
-| 5.000 | 2,7 a 2,9 ms | 2,7 a 3,9 ms | 216 a 229 | 0 |
+| 100 | 3,5 a 7,5 ms | 4,4 a 39,1 ms | 83 a 179 | 0 |
+| 1.000 | 3,2 a 3,6 ms | 4,3 a 7,4 ms | 171 a 190 | 0 |
+| 5.000 | 3,2 a 4,8 ms | 5,6 a 16,2 ms | 129 a 191 | 0 |
 
 O custo é por requisição e não cresce com o tamanho do relatório. Com 100
 achados, as primeiras chamadas pagam o aquecimento do serviço. Somando as doze
-rodadas, foram **24.400 achados** triados, nenhuma trava violada, e a mesma
-entrada deu o mesmo plano. No runner do GitHub, com 200 achados por perfil, o
-contrato custou cerca de 1,5 a 1,6 ms por requisição.
+rodadas, foram **24.400 achados** triados, nenhuma trava violada, nenhum
+conforme sem uma leitura que mede o item, e a mesma entrada deu o mesmo plano.
+
+**Leia os tempos como indicativos.** A máquina era compartilhada: uma segunda
+rodada idêntica deu os mesmos planos e tempos diferentes. A referência mais
+limpa é o runner do GitHub, onde, com 200 achados por perfil, o contrato custou
+cerca de 1,1 a 1,2 ms por requisição.
 
 **O que a camada muda depende do host.** Com 1.000 achados:
 
-- a estação com interface gráfica recebe menos sinais de "contexto atenua",
-  porque lá os itens de tela de login não estão fora do papel
-- o servidor web recebe mais sinais de "exige reinício", porque as correções
-  que reiniciam o serviço de registro batem num serviço que ele presta
-- o nó de Kubernetes recebe mais sinais de "risco de quebra alto" e mais
-  caminhos subindo, 166 contra 145, porque desligar o encaminhamento de pacotes
-  quebra um nó que encaminha tráfego entre pods
+- cada host só atenua o que não é dele: o nó de Kubernetes recebe 17 sinais de
+  "contexto atenua" e a estação com interface gráfica 187, contra 204 nos dois
+  servidores, porque os itens de permissão de arquivo do Kubernetes são do
+  papel do nó e o item do protocolo gráfico moderno é do papel da estação
+- o servidor web recebe mais sinais de "exige reinício", 34 contra 17, porque
+  as correções que reiniciam o serviço de registro batem num serviço que ele
+  presta
+
+O sinal de "risco de quebra alto" saiu igual nos quatro hosts, porque o serviço
+simulado julga esse risco pelo item, não pelo host.
 
 **Os caminhos só subiram**, em todas as rodadas. **Nenhum candidato a exceção
 apareceu**: com respostas simuladas, o grupo de contexto nunca juntou valor e

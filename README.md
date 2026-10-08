@@ -171,11 +171,12 @@ carries a validator that has to pass before it is trusted.
 
 ## How it is proven
 
-**A known-answer control, 40 of 40.** Every rule of the composition has a case
+**A known-answer control, 41 of 41.** Every rule of the composition has a case
 with the right answer written before it runs, including the worked examples of
-the Jev documentation itself.
+the Jev documentation itself. The generator of the benchmark reports has a case
+too.
 
-**Rules broken on purpose, 25 of 25 caught.** Each one damages a single thing
+**Rules broken on purpose, 26 of 26 caught.** Each one damages a single thing
 (lowering two steps, letting the route go down, centring the Score on the
 mean) and the control has to fail. A control that never fails proves nothing.
 
@@ -197,31 +198,38 @@ hardware.
 
 The input reports are synthetic. The item, the reading, the criterion and the
 detail come from the catalog and from the engine's own comparison; only the
-value read is invented. Four host profiles, with 100, 1,000 and 5,000 findings
-each, on a one core Linux machine. One request per item, ranges across the four
-profiles:
+value read is invented. Only the 59 Linux readings that give a verdict go in,
+and the same item never appears twice on the same machine. Four host profiles,
+with 100, 1,000 and 5,000 findings each, on a one core Linux machine. One
+request per item, ranges across the four profiles:
 
 | Findings | Average per request | p95 | Findings per second | Locks violated |
 |---:|---:|---:|---:|---:|
-| 100 | 2.6 to 4.4 ms | 2.7 to 7.5 ms | 143 to 236 | 0 |
-| 1,000 | 2.7 to 2.8 ms | 2.9 to 3.1 ms | 218 to 232 | 0 |
-| 5,000 | 2.7 to 2.9 ms | 2.7 to 3.9 ms | 216 to 229 | 0 |
+| 100 | 3.5 to 7.5 ms | 4.4 to 39.1 ms | 83 to 179 | 0 |
+| 1,000 | 3.2 to 3.6 ms | 4.3 to 7.4 ms | 171 to 190 | 0 |
+| 5,000 | 3.2 to 4.8 ms | 5.6 to 16.2 ms | 129 to 191 | 0 |
 
 The cost is per request and does not grow with the size of the report. At 100
 findings the first calls pay for the service warming up. Across the twelve runs,
-**24,400 findings** were triaged, no lock was violated, and the same input
-produced the same plan. On the GitHub runner, with 200 findings per profile, the
-contract cost about 1.5 to 1.6 ms per request.
+**24,400 findings** were triaged, no lock was violated, no compliant item came
+without a reading that measures it, and the same input produced the same plan.
+
+**Read the times as indicative.** The machine was shared: a second identical
+run produced the same plans and different times. The cleanest reference is the
+GitHub runner, where, with 200 findings per profile, the contract cost about
+1.1 to 1.2 ms per request.
 
 **What the layer changes depends on the host.** With 1,000 findings:
 
-- the graphical workstation gets fewer "context attenuates" signals, because
-  login screen items are not outside its role there
-- the web server gets more "requires restart" signals, because the fixes that
-  restart the logging service hit a service it provides
-- the Kubernetes node gets more "high break risk" signals and more routes
-  raised, 166 against 145, because turning packet forwarding off breaks a node
-  that forwards traffic between pods
+- each host only attenuates what is not its own: the Kubernetes node gets 17
+  "context attenuates" signals and the graphical workstation 187, against 204
+  on the two servers, because the Kubernetes file permission items belong to
+  the node's role and the modern display protocol item to the workstation's
+- the web server gets more "requires restart" signals, 34 against 17, because
+  the fixes that restart the logging service hit a service it provides
+
+The "high break risk" signal came out the same on all four hosts, because the
+simulated service judges that risk by the item, not by the host.
 
 **Routes only went up**, in every run. **No exception candidate appeared**: with
 simulated answers, the context group never gathered enough value and confidence
